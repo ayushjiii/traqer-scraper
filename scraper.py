@@ -104,7 +104,6 @@ def dismiss_cookie_banner(page):
     except Exception:
         pass
 
-
 def run_prompt(page, prompt_text, output_path):
     # Set a standard desktop width, but a normal height to start so the UI renders normally
     page.set_viewport_size({"width": 1440, "height": 1080})
@@ -178,6 +177,135 @@ def run_prompt(page, prompt_text, output_path):
 
     # Take the screenshot of the newly expanded UI
     page.screenshot(path=output_path, full_page=True)
+
+    # 4. DOM DATA EXTRACTION (The Foolproof Way)
+    print("  -> extracting text and sources from the page...", end='', flush=True)
+    try:
+        # Run JavaScript directly on the page to scrape the final text and links
+        extracted_data = page.evaluate('''() => {
+            const result = {
+                "parsed_response": "",
+                "sources": []
+            };
+
+            // Grab all assistant messages, and pick the last one (the current response)
+            const messages = document.querySelectorAll('[data-message-author-role="assistant"]');
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+
+                // Get the plain text of the response
+                result.parsed_response = lastMessage.innerText;
+
+                // Grab all links inside the response to build our sources list
+                const links = lastMessage.querySelectorAll('a');
+                links.forEach(link => {
+                    const url = link.href;
+                    // Filter out internal OpenAI links (like UI buttons) so we only get external sources
+                    if (url && url.startsWith('http') && !url.includes('chatgpt.com') && !url.includes('chat.openai.com')) {
+                        result.sources.push({
+                            "text": link.innerText.trim(),
+                            "url": url
+                        });
+                    }
+                });
+            }
+            return result;
+        }''')
+
+        # Add the prompt back into the dictionary
+        extracted_data["prompt"] = prompt_text
+
+        # Save it to a file
+        json_output_path = output_path.replace('.png', '.json')
+        with open(json_output_path, 'w', encoding='utf-8') as f:
+            json.dump(extracted_data, f, indent=4)
+        print(f" saved to {os.path.basename(json_output_path)}")
+
+    except Exception as e:
+        print(f"\n  -> Failed to extract JSON data from DOM: {e}")
+
+    def handle_response(response):
+        # Only look at the specific API endpoint that handles the chat generation
+        if "backend-api" in response.url and "conversation" in response.url and response.request.method == "POST":
+            try:
+                # The response is a stream of text bytes
+                body = response.body().decode('utf-8')
+
+                # Split the stream by lines
+                lines = body.split('\n')
+                for line in lines:
+                    if line.startswith('data: ') and '[DONE]' not in line:
+                        # Strip the 'data: ' prefix so we are left with pure JSON
+                        json_str = line[6:]
+                        try:
+                            chunk_data = json.loads(json_str)
+                            extracted_data["raw_stream_chunks"].append(chunk_data)
+
+                            # Basic extraction of the text (schema may vary)
+                            try:
+                                parts = chunk_data.get('message', {}).get('content', {}).get('parts', [])
+                                if parts:
+                                    extracted_data["parsed_response"] = parts[0]
+                            except Exception:
+                                pass
+                        except json.JSONDecodeError:
+                            continue
+            except Exception as e:
+                print(f"    [!] Error parsing network data: {e}")
+
+    # Attach the listener to the page BEFORE we submit the prompt
+    page.on("response", handle_response)
+
+    # 3. SUBMIT THE PROMPT
+    input_box = page.locator(
+        'textarea:visible, '
+        '[contenteditable="true"]:visible, '
+        '#prompt-textarea:visible'
+    ).first
+
+    input_box.wait_for(state="visible", timeout=15000)
+    input_box.click(force=True)
+
+    for ch in prompt_text:
+        page.keyboard.type(ch)
+        time.sleep(max(0.03, random.gauss(0.08, 0.03)))
+
+    time.sleep(random.uniform(0.5, 1.2))
+    page.keyboard.press("Enter")
+
+    wait_for_response(page)
+
+    if page.locator('[data-message-author-role="assistant"]').count() == 0:
+        raise Exception("response element not found after generation")
+
+    # 4. THE FULL UI CAPTURE FIX
+    time.sleep(1.0)  # Let the UI settle completely
+    dismiss_cookie_banner(page)  # Double check it didn't pop up again
+
+    try:
+        # Dynamically calculate how tall the chat container actually is
+        chat_height = page.evaluate("""() => {
+            const main = document.querySelector('main');
+            return main ? main.scrollHeight : document.body.scrollHeight;
+        }""")
+
+        new_height = max(1080, int(chat_height) + 150)
+        page.set_viewport_size({"width": 1440, "height": new_height})
+        time.sleep(1.5)  # Give the browser a second to redraw the UI at the new height
+    except Exception as e:
+        print(f"  -> warning: could not dynamically resize viewport: {e}")
+
+    # Take the screenshot of the newly expanded UI
+    page.screenshot(path=output_path, full_page=True)
+
+    # 5. SAVE THE INTERCEPTED JSON DATA
+    try:
+        json_output_path = output_path.replace('.png', '.json')
+        with open(json_output_path, 'w', encoding='utf-8') as f:
+            json.dump(extracted_data, f, indent=4)
+        print(f"  -> JSON data extracted and saved to {os.path.basename(json_output_path)}")
+    except Exception as e:
+        print(f"  -> Failed to save JSON data: {e}")
 
 
 def process_queue():
