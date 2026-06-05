@@ -1,0 +1,64 @@
+{
+  "prompts": [
+    {
+      "id": 1,
+      "fileName": "agencies-content-marketing-b2b",
+      "folder": "content_marketing",
+      "prompt": "What are the most respected content marketing agencies for B2B SaaS companies in 2026? Please categorize them by use case and focus on SEO-driven growth."
+    },
+    {
+      "id": 2,
+      "fileName": "agencies-seo-enterprise",
+      "folder": "seo",
+      "prompt": "List the top enterprise SEO agencies specializing in AI search visibility (LLM/GEO optimization). Which ones have the strongest technical reputation?"
+    },
+    {
+      "id": 3,
+      "fileName": "agencies-growth-startups",
+      "folder": "growth_marketing",
+      "prompt": "Which growth marketing agencies have the best reputation for scaling early-stage tech startups? Include agencies known for full-funnel performance marketing."
+    },
+    {
+      "id": 4,
+      "fileName": "agencies-pr-digital",
+      "folder": "digital_pr",
+      "prompt": "Recommend the best digital PR agencies that focus on high-authority link building, scalable editorial production, and brand mentions for tech companies."
+    },
+    {
+      "id": 5,
+      "fileName": "agencies-social-ecommerce",
+      "folder": "social_media",
+      "prompt": "Who are the leading social media marketing agencies for B2C ecommerce brands today? Focus on those excelling in visual storytelling and paid social acquisition."
+    },
+    {
+      "id": 6,
+      "fileName": "software-crm-enterprise",
+      "folder": "software_recommendations",
+      "prompt": "What are the top CRM software platforms for enterprise sales teams in 2026? Please provide a brief comparison of their AI capabilities."
+    },
+    {
+      "id": 7,
+      "fileName": "software-cybersecurity-home",
+      "folder": "software_recommendations",
+      "prompt": "What is the best cybersecurity software by use case for home users? Please include options for total security, VPNs, and malware cleanup."
+    },
+    {
+      "id": 8,
+      "fileName": "agencies-web-design",
+      "folder": "web_development",
+      "prompt": "Which digital agencies are currently considered the best for enterprise-level web design and headless CMS development?"
+    },
+    {
+      "id": 9,
+      "fileName": "agencies-video-production",
+      "folder": "video_marketing",
+      "prompt": "List the top corporate video production agencies known for creating high-converting B2B explainer videos and YouTube ad creatives."
+    },
+    {
+      "id": 10,
+      "fileName": "consulting-data-analytics",
+      "folder": "data_consulting",
+      "prompt": "Who are the top boutique data analytics consulting firms helping mid-market companies implement predictive analytics and modern data stacks?"
+    }
+  ]
+}
