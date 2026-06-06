@@ -1,16 +1,12 @@
-# Python Environments
 .venv/
 env/
 __pycache__/
 
-# Sensitive Data & Proxies
 proxies.txt
 
-# Heavy Folders & Archives
 profiles/
 screenshots/
 screenshots.zip
 
-# Test Artifacts
 result_chatgpt_*.png
 test.py
